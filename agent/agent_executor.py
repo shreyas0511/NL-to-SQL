@@ -25,7 +25,7 @@ class CustomAgentExecutor:
 
         # this is temporary storage for each agent execution loop, so we only define it here
         agent_scratchpad = []
-
+        found_final_answer = False
         while count < self.max_iterations:
             # invoke one iteration of the agent
             tool_call = self.agent.invoke(
@@ -55,15 +55,13 @@ class CustomAgentExecutor:
 
             # check if the current tool is the final answer tool
             if tool_name == "final_answer":
+                found_final_answer = True
                 break
         
-        # add the human input and AI final answer to chat history
-        final_answer = tool_execution_content
+        final_answer = tool_args if found_final_answer else {"answer":"No answer found", "tools_used":[]}
         self.chat_history.extend([
             HumanMessage(content=input),
-            AIMessage(content=str(final_answer))
+            AIMessage(content=json.dumps(final_answer))
         ])
-
-        # return final answer in json format
-        return json.dumps(final_answer)
+        return final_answer
             

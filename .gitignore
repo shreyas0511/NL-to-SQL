@@ -1,3 +1,4 @@
 .env
 Chinook_Sqlite.sqlite
 plan.txt
+data/

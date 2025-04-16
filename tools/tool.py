@@ -1,19 +1,17 @@
 from langchain_core.tools import tool, StructuredTool
 import pandas as pd
-from db.init_db import result_df, result_query, db
+import db.init_db as db_state
 
 @tool
 def execute_query(sql_query: str) -> str:
     """ Execute the given 'sql_query' against our database """
-    global result_df, result_query, db
-
     try:
         # execute the llm generated sql query against the database and store result in result dataframe
-        with db._engine.connect() as conn:
-            result_df = pd.read_sql(sql_query, conn)
+        with db_state.db._engine.connect() as conn:
+            db_state.result_df = pd.read_sql(sql_query, conn)
 
         # store llm query
-        result_query = sql_query
+        db_state.result_query = sql_query
 
         # Now the summary text to be returned by the tool
         num_rows = len(result_df)
@@ -34,9 +32,17 @@ def final_answer(answer: str, tools_used: list[str]) -> dict[str|list[str | None
     The answer should be in natural language as this will be provided
     to the user directly. The tools_used must include a list of tool
     names that were used within the `scratchpad`. 
+    The answer MUST be a summary of the result and not the result itself.
+    provide answer similar to the example responses provided below:
     An example response on success is: 
     'answer': Successfully executed the query, returned x number of rows,
     'tools_used': [execute_query]
+    An example response on failure is:
+    'answer': Error, could not execute the query
+    'tools_used':[execute_query]
+    or
+    'answer': Error, invalid table column, please recheck query
+    'tools_used':[execute_query]
     """
     return {"answer":answer, "tools_used":tools_used}
 
