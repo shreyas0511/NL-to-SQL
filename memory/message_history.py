@@ -25,10 +25,16 @@ class JSONMessageHistory:
         """
         history = None
         file_path = os.path.join(self.memory_directory, file_name)
-        if not os.path.exists(file_path) or os.path.getsize(file_path) == 0:
+        if not os.path.exists(file_path):
+            with open(file_path, "w") as f:
+                pass
             history = []
+
         with open(file_path, "r") as f:
-            history = messages_from_dict(json.load(f))
+            try:
+                history = messages_from_dict(json.load(f))
+            except json.JSONDecodeError:
+                history = []
 
         return history
     

@@ -3,9 +3,11 @@ from langchain_core.runnables import RunnableSerializable
 import json
 from setup import llm, prompt
 from tools.tool import tools, tool_func_map
+from memory.message_history import JSONMessageHistory
 
 class CustomAgentExecutor:
-    def __init__(self):
+    def __init__(self, message_history: JSONMessageHistory):
+        self.message_history = message_history
         self.chat_history: list[BaseMessage] = []
         self.max_iterations: int = 5
         self.agent: RunnableSerializable = (
@@ -19,7 +21,7 @@ class CustomAgentExecutor:
             | llm.bind_tools(tools, tool_choice="any")
         )
 
-    def invoke(self, database_schema: str, input: str):
+    def invoke(self, database_schema: str, input: str, file_name: str):
         # keep invoking the agent iteratively in a loop until we get the final answer
         count = 0
 
@@ -32,7 +34,7 @@ class CustomAgentExecutor:
                 {
                     "database_schema": database_schema,
                     "input": input,
-                    "chat_history": self.chat_history,
+                    "chat_history": self.message_history.load(file_name),
                     "agent_scratchpad": agent_scratchpad
                 }
             )
@@ -63,5 +65,6 @@ class CustomAgentExecutor:
             HumanMessage(content=input),
             AIMessage(content=json.dumps(final_answer))
         ])
+        self.message_history.save(file_name, self.chat_history)
         return final_answer
             

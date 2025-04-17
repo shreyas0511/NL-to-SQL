@@ -1,5 +1,7 @@
 import os
 from dotenv import load_dotenv
+from google import genai
+from google.api_core import retry
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
@@ -21,6 +23,12 @@ gemini_model = "gemini-2.0-flash"
 #     )
 # )
 
+# setup a retry helper
+is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {429, 503})
+genai.models.Models.generate_content = retry.Retry(
+    predicate=is_retriable)(genai.models.Models.generate_content)
+
+print("✅ Initializing Gemini LLM...")
 # We are not using streaming, because it seems overkill for this task
 llm = ChatGoogleGenerativeAI(temperature=0.0, model=gemini_model)
 

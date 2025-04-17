@@ -5,7 +5,8 @@ from langchain_community.utilities import SQLDatabase
 from handlers.queue_callback_handler import QueueCallbackHandler
 from agent.agent_executor import CustomAgentExecutor
 import db.init_db as db_state
-
+from pydantic import BaseModel
+from memory.message_history import JSONMessageHistory
 
 # Initialize FastAPI app
 app = FastAPI(title="NL-to-SQL Agent API")
@@ -22,8 +23,10 @@ app.add_middleware(
 UPLOAD_DIR = "data/uploaded_dbs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+message_history = JSONMessageHistory('data')
+
 # single shared executor (thread-safe for simple demo)
-agent_executor = CustomAgentExecutor()
+agent_executor = CustomAgentExecutor(message_history)
 
 # db uri
 db_uri = None
@@ -56,11 +59,23 @@ def upload_db(file: UploadFile = File(...)):
         "db_name": file.filename,
     }
 
+class QueryRequest(BaseModel):
+    uuid: str
+    prompt: str
+
 # Natural language query endpoint
 @app.post("/query")
-def run_query(query: str):
+def run_query(req: QueryRequest):
     """Run natural language query on uploaded DB."""
-    global db, db_uri, db_schema, agent_executor
+    global agent_executor
+
+    file_name = f"{req.uuid}.json"
+    db_path = f"data/db/{req.uuid}.db"
+
+    db_uri = f"sqlite:///{db_path}"
+    db = SQLDatabase.from_uri(db_uri)
+
+    db_schema = db.get_table_info()
 
     # Retrieve schema + db_uri
     if not db_schema:
@@ -81,7 +96,7 @@ def run_query(query: str):
     # )
 
     # without streaming
-    output = agent_executor.invoke(database_schema=db_schema, input=query)
+    output = agent_executor.invoke(db_schema, req.prompt, file_name)
 
     if output["answer"] != "No answer found":
         print(db_state.result_query)
