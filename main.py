@@ -71,13 +71,16 @@ def run_query(req: QueryRequest):
     # Fetch db file on each request because request can be with different dbs
     # different dbs might be uploaded in different chat sessions
     chat_id = req.uuid
-    file_name = chat_id + ".json"
     db_path = f"data/db/{req.uuid}.db"
 
     db_uri = f"sqlite:///{db_path}"
+    db_state.db_uri = db_uri
+
     db = SQLDatabase.from_uri(db_uri)
+    db_state.db = db
 
     db_schema = db.get_table_info()
+    db_state.table_schema_info = db_schema
 
     # Retrieve schema + db_uri
     if not db_schema:

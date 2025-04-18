@@ -3,7 +3,7 @@ import json
 from langchain_core.messages import BaseMessage
 from langchain_core.messages import messages_from_dict
 from langchain_core.messages.base import messages_to_dict
-from base_history import MessageHistory
+from memory.base_history import MessageHistory
 
 class JSONMessageHistory(MessageHistory):
     def __init__(self, root_path: str):
