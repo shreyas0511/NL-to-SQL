@@ -21,7 +21,7 @@ class CustomAgentExecutor:
             | llm.bind_tools(tools, tool_choice="any")
         )
 
-    def invoke(self, database_schema: str, input: str, file_name: str):
+    def invoke(self, database_schema: str, input: str, chat_id: str):
         # keep invoking the agent iteratively in a loop until we get the final answer
         count = 0
 
@@ -34,7 +34,7 @@ class CustomAgentExecutor:
                 {
                     "database_schema": database_schema,
                     "input": input,
-                    "chat_history": self.message_history.load(file_name),
+                    "chat_history": self.message_history.load(chat_id),
                     "agent_scratchpad": agent_scratchpad
                 }
             )
@@ -65,6 +65,6 @@ class CustomAgentExecutor:
             HumanMessage(content=input),
             AIMessage(content=json.dumps(final_answer))
         ])
-        self.message_history.save(file_name, self.chat_history)
+        self.message_history.save(chat_id, self.chat_history)
         return final_answer
             

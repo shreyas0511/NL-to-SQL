@@ -19,19 +19,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize database file upload directory if does not already exists
+# Initialize database file upload directory if does not already exist
 UPLOAD_DIR = "data/uploaded_dbs"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+# Initialize message history
 message_history = JSONMessageHistory('data')
 
-# single shared executor (thread-safe for simple demo)
+# Initialize the agent executor
 agent_executor = CustomAgentExecutor(message_history)
-
-# db uri
-db_uri = None
-db = None
-db_schema = None
 
 # Health check
 @app.get("/")
@@ -41,7 +37,6 @@ def health():
 # Upload DB endpoint
 @app.post("/upload_db")
 def upload_db(file: UploadFile = File(...)):
-    global db_uri, db, db_schema
 
     """Save uploaded SQLite DB and cache schema."""
     file_path = os.path.join(UPLOAD_DIR, file.filename)
@@ -50,15 +45,19 @@ def upload_db(file: UploadFile = File(...)):
 
     # Build connection URI and extract schema
     db_uri = f"sqlite:///{file_path}"
+    db_state.db_uri = db_uri
+
     db = SQLDatabase.from_uri(db_uri)
     db_state.db = db
-    db_schema = db.get_table_info()
+
+    db_state.table_schema_info = db.get_table_info()
 
     return {
         "message": f"Database {file.filename} uploaded successfully",
         "db_name": file.filename,
     }
 
+# Pydantic model for query endpoint
 class QueryRequest(BaseModel):
     uuid: str
     prompt: str
@@ -69,7 +68,10 @@ def run_query(req: QueryRequest):
     """Run natural language query on uploaded DB."""
     global agent_executor
 
-    file_name = f"{req.uuid}.json"
+    # Fetch db file on each request because request can be with different dbs
+    # different dbs might be uploaded in different chat sessions
+    chat_id = req.uuid
+    file_name = chat_id + ".json"
     db_path = f"data/db/{req.uuid}.db"
 
     db_uri = f"sqlite:///{db_path}"
@@ -80,9 +82,6 @@ def run_query(req: QueryRequest):
     # Retrieve schema + db_uri
     if not db_schema:
         return {"error": "Database schema not found. Please upload the DB first."}
-
-    # Recreate SQLDatabase for this session
-    # db = SQLDatabase.from_uri(db_uri)
 
     # Optional streaming queue if using streaming
     # queue = asyncio.Queue()
@@ -96,16 +95,11 @@ def run_query(req: QueryRequest):
     # )
 
     # without streaming
-    output = agent_executor.invoke(db_schema, req.prompt, file_name)
+    output = agent_executor.invoke(db_schema, req.prompt, chat_id)
 
     if output["answer"] != "No answer found":
         print(db_state.result_query)
         print(db_state.result_df)
-
-    # return {
-    #     "answer": output,
-    #     "query": db_state.result_query,
-    # }
 
     return {
     "answer": output["answer"],

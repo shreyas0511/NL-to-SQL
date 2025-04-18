@@ -10,7 +10,7 @@ def execute_query(sql_query: str) -> str:
         with db_state.db._engine.connect() as conn:
             db_state.result_df = pd.read_sql(sql_query, conn)
 
-        # store llm query
+        # store llm generated query
         db_state.result_query = sql_query
 
         # Now the summary text to be returned by the tool

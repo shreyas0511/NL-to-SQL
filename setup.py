@@ -5,14 +5,14 @@ from google.api_core import retry
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-import os
+# Langsmith for tracing LLM calls
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "Talk2SQL"
 os.environ["LANGCHAIN_API_KEY"] = "your_langsmith_key"
 
+# Initialize gemini api key and load gemini model
 load_dotenv(override=True)
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
-
 gemini_model = "gemini-2.0-flash"
 
 # If using streaming
@@ -33,7 +33,7 @@ is_retriable = lambda e: (isinstance(e, genai.errors.APIError) and e.code in {42
 genai.models.Models.generate_content = retry.Retry(
     predicate=is_retriable)(genai.models.Models.generate_content)
 
-print("✅ Initializing Gemini LLM...")
+print("Initializing Gemini LLM...")
 # We are not using streaming, because it seems overkill for this task
 llm = ChatGoogleGenerativeAI(temperature=0.0, model=gemini_model)
 

@@ -6,7 +6,10 @@ result_df: pd.DataFrame = None
 result_query: str = ""
 
 # hardcoding for now, will accept from user later
-db = SQLDatabase.from_uri("sqlite:///Chinook_Sqlite.sqlite")
+# db = SQLDatabase.from_uri("sqlite:///Chinook_Sqlite.sqlite")
 
-table_schema_info = db.get_table_info()
+db_uri = ""
+db = None
+
+table_schema_info = ""
 # print(table_schema_info)
