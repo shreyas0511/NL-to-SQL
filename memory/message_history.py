@@ -48,9 +48,9 @@ class JSONMessageHistory:
             # create a new file if not already exists
             with open(file_path, "w") as f:
                 pass
-            return True
+            # return True
         
-        message_history = self.load(file_path)
+        message_history = self.load(file_name)
         message_history.extend(messages)
         messages_dict = messages_to_dict(message_history)
 

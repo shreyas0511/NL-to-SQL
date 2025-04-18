@@ -5,6 +5,11 @@ from google.api_core import retry
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
+import os
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = "Talk2SQL"
+os.environ["LANGCHAIN_API_KEY"] = "your_langsmith_key"
+
 load_dotenv(override=True)
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 

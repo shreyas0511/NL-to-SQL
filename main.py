@@ -102,9 +102,17 @@ def run_query(req: QueryRequest):
         print(db_state.result_query)
         print(db_state.result_df)
 
+    # return {
+    #     "answer": output,
+    #     "query": db_state.result_query,
+    # }
+
     return {
-        "answer": output,
-        "query": db_state.result_query,
+    "answer": output["answer"],
+    "query": db_state.result_query,
+    "result": db_state.result_df.values.tolist(),
+    "columns": db_state.result_df.columns.tolist(),
     }
+
 
 # Run with:  uvicorn main:app --reload

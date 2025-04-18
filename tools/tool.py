@@ -14,10 +14,10 @@ def execute_query(sql_query: str) -> str:
         db_state.result_query = sql_query
 
         # Now the summary text to be returned by the tool
-        num_rows = len(result_df)
+        num_rows = len(db_state.result_df)
 
         # number of rows returned might be too many so only display the top 10 rows
-        result_df = result_df.head(10)
+        db_state.result_df = db_state.result_df.head(10)
 
         # message string to pass to the agent scratchpad in case of successful result
         msg = f"Successfully executed query, returned {num_rows} rows"
