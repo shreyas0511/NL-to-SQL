@@ -9,7 +9,6 @@ __pycache__/
 *$py.class
 
 .ipynb_checkpoints/
-*.ipynb
 
 .vscode/
 .idea/
