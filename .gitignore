@@ -3,6 +3,7 @@
 plan.txt
 data/
 storage/
+.venv
 
 __pycache__/
 *.py[cod]
